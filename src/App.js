@@ -1,5 +1,5 @@
 import React from "react"
-import WalletConnectProvider from "walletconnect-provider/src/index.js"
+import WalletConnectProvider from "@maticnetwork/walletconnect-provider"
 import Web3 from "web3"
 import Matic from "maticjs"
 
@@ -100,6 +100,8 @@ class App extends React.Component {
     if (ropstenProvider) {
       ropstenProvider.disconnect()
     }
+
+    this.onDisconnect()
   }
 
   connectScreen() {
