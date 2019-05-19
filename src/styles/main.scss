@@ -6,6 +6,15 @@ html {
   height: 100%;
 }
 
+.btn,
+.btn:focus {
+  outline: none;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
 .navbar {
   border-bottom: 1px solid rgba(11, 21, 71, 0.03);
   box-shadow: 0 1px 7px 0 rgba(11, 21, 71, 0.05);
