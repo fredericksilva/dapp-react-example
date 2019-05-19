@@ -1,6 +1,7 @@
 import React from "react"
 import WalletConnectProvider from "walletconnect-provider/src/index.js"
 import Web3 from "web3"
+import Matic from "maticjs"
 
 import Header from "./components/header"
 
@@ -16,9 +17,9 @@ class App extends React.Component {
     this.checkAuth()
   }
 
-  checkAuth = () => {
+  checkAuth = async () => {
     if (storage && storage.getItem("loggedIn")) {
-      this.connectToWallet()
+      await this.connectToWallet()
     }
   }
 
@@ -38,9 +39,16 @@ class App extends React.Component {
     }
   }
 
-  connectToWallet = () => {
+  connectToWallet = async () => {
+    const maticJSONData = await fetch(
+      "https://wallet.matic.today/addresses.json"
+    ).then(res => {
+      return res.json()
+    })
+    const testnetData = maticJSONData["TestnetV2"]
+
     const maticProvider = new WalletConnectProvider({
-      host: "https://testnet2.matic.network",
+      host: testnetData.Matic.RPC,
       callbacks: {
         onConnect: this.onConnect,
         onDisconnect: this.onDisconnect
@@ -48,7 +56,7 @@ class App extends React.Component {
     })
 
     const ropstenProvider = new WalletConnectProvider({
-      host: "https://testnet2.matic.network",
+      host: testnetData.Main.RPC,
       callbacks: {
         onConnect: this.onConnect,
         onDisconnect: this.onDisconnect
@@ -57,15 +65,27 @@ class App extends React.Component {
 
     const maticWeb3 = new Web3(maticProvider)
     const ropstenWeb3 = new Web3(ropstenProvider)
+    const maticObj = new Matic({
+      maticProvider: maticProvider,
+      parentProvider: ropstenProvider,
+      rootChainAddress: testnetData.Main.Contracts.RootChain,
+      withdrawManagerAddress: testnetData.Main.Contracts.WithdrawManager,
+      depositManagerAddress: testnetData.Main.Contracts.DepositManager,
+      syncerUrl: testnetData.Matic.SyncerAPI,
+      watcherUrl: testnetData.Main.WatcherAPI,
+      maticWethAddress: testnetData.Matic.Contracts.ChildWETH
+    })
 
     // fetch accounts
     maticWeb3.eth.getAccounts().then(accounts => {
       // set address
       this.setState({
+        testnetData,
         maticWeb3,
         ropstenWeb3,
         maticProvider,
         ropstenProvider,
+        maticObj,
         address: accounts[0]
       })
     })
@@ -98,14 +118,22 @@ class App extends React.Component {
   }
 
   homeScreen() {
-    return <div className="container">Hello</div>
+    return (
+      <div className="container">
+        <div class="my-5">Hello</div>
+      </div>
+    )
   }
 
   render() {
-    const { address } = this.state
+    const { address, testnetData } = this.state
     return (
       <div>
-        <Header address={address} disconnect={this.disconnect} />
+        <Header
+          address={address}
+          testnetData={testnetData}
+          disconnect={this.disconnect}
+        />
         {!address ? this.connectScreen() : this.homeScreen()}
       </div>
     )
